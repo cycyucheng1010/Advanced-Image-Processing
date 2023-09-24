@@ -73,6 +73,7 @@ class MyWidget(QWidget):
 			self.canvas2 = QPixmap(360,360).fromImage(qimg)
 			self.label2.setPixmap(self.canvas2)
 			os.remove('temp.png')
+			self.canvas2.save('rotate.png','png')
 		except Exception as e:
 			print(e)
 
