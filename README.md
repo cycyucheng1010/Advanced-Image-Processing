@@ -8,3 +8,5 @@ pyinstaller -F app.py
 * Pyinstaller
 * opencv-python
 * PyQt5
+* numpy
+* matplotlib
