@@ -82,10 +82,11 @@ class MyWidget(QWidget):
 		plt.title('image')
 		plt.xlabel('Intensity')
 		plt.ylabel('Frequency')
-		hist,bin = np.histogram(self.gray_image.ravel(),256,[0,255])
+		#hist,bin = np.histogram(self.gray_image.ravel(),256,[0,255])
 		plt.xlim([0,255])
-		plt.plot(hist)
+		#plt.plot(hist)
 		plt.title('gray level histogram')
+		plt.hist(self.gray_image.ravel(), 256, [0, 256])
 		plt.savefig('gray_level_histogram.png')
 		plt.close()
 
