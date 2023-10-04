@@ -3,9 +3,9 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 from PyQt5.QtWidgets import QApplication, QWidget
-from PyQt5.QtWidgets import QLabel,QPushButton,QFileDialog
+from PyQt5.QtWidgets import QLabel,QPushButton,QFileDialog,QInputDialog
 from PyQt5.QtGui import QIcon,QImage,QPixmap
-from PyQt5.QtCore import pyqtSlot
+from skimage.util import random_noise
 
 
 class MyWidget(QWidget):
@@ -23,20 +23,40 @@ class MyWidget(QWidget):
 
 		self.label1 = QLabel(self)
 		self.label2 = QLabel(self)
+		self.label3 = QLabel(self)
+		self.label4 = QLabel(self)
+		self.label5 = QLabel(self)
+		self.label6 = QLabel(self)
 		self.label1.setGeometry(25,75,300,200)
 		self.label2.setGeometry(375,75,300,200)
+		self.label3.setGeometry(725,75,300,200)
+		self.label4.setGeometry(25,350,300,200)
+		self.label5.setGeometry(375,350,300,200)
+		self.label6.setGeometry(725,350,300,200)
 		# button
 		self.btn1 = QPushButton('Open File',self)
 		self.btn1.move(325,150)
 		self.btn1.clicked.connect(self.file_manager)
+		
 		self.btn2 = QPushButton('Rotate Image',self)
-		self.btn2.move(480,30)
+		self.btn2.move(145,30)
 		self.btn2.clicked.connect(self.rotate_img)
 		self.btn2.hide()
+		
 		self.btn3 = QPushButton('Histogram',self)
-		self.btn3.move(300,30)
+		self.btn3.move(250,30)
 		self.btn3.clicked.connect(self.show_histogram)
 		self.btn3.hide()
+
+		self.btn4 = QPushButton('gaussian noise',self)
+		self.btn4.move(350,30)
+		self.btn4.clicked.connect(self.input_gaussian_noise_parameter)
+		self.btn4.hide()
+
+		self.btn5 = QPushButton('salt and pepper noise',self)
+		self.btn5.move(450,30)
+		self.btn5.clicked.connect(self.input_salt_gaussian_parameter)
+		self.btn5.hide()
 		# show the window
 		self.show()
 
@@ -63,7 +83,9 @@ class MyWidget(QWidget):
 		self.label2.setPixmap(self.canvas2)
 		self.btn2.show()
 		self.btn3.show()
-		self.btn1.move(125,30)
+		self.btn4.show()
+		self.btn5.show()
+		self.btn1.move(50,30)
 		self.canvas2.save('rotate.png','png')
 
 	def rotate_img(self):
@@ -104,10 +126,81 @@ class MyWidget(QWidget):
 			self.label2.setPixmap(self.canvas2)
 		except Exception as e:
 			print(e)
+	
+	def input_salt_gaussian_parameter(self):
+		try:
+			percentage, p_ok = QInputDialog.getDouble(self,'input dialog','input percentage')
+			if p_ok & (type(percentage)is int) or (type(percentage)is float):
+				self.noise_percentage = percentage
+				print(self.noise_percentage)
+				self.salt_and_pepper_noise()
+		except Exception as e:
+			print(e)
 
+	def input_gaussian_noise_parameter(self):
+		try:
+			variation,v_ok = QInputDialog.getDouble(self, 'input dialog', 'input variation')
+			if v_ok & ((type(variation) is int) or (type(variation) is float)):
+				standard_deviation,s_ok = QInputDialog.getDouble(self, 'input dialog', 'standard_deviation')
+				if s_ok & ((type(standard_deviation) is int) or (type(standard_deviation) is float)):
+					self.noise_parameter = [variation,standard_deviation]
+					print('noise percentage',self.noise_parameter)
+					self.gaussian_noise()
+				elif (type(standard_deviation) is not float) & s_ok:
+					print('standard deviation type error')
+			elif (type(variation) is not float) & v_ok:
+				print('variation type error')
+		except Exception as e:
+			print(e)
 
+	def gaussian_noise(self):
+		pass
+	
+	def salt_and_pepper_noise(self):
+		#pure noise
+		height = self.height
+		width = self.width
+		noise_percentage = self.noise_percentage
+		pure_noise = np.full((height, width),255, dtype = np.uint8)
+		pure_noise_image = random_noise(pure_noise,mode='s&p',amount = noise_percentage/100)
+		pure_noise_image = (pure_noise_image *255).astype(np.uint8)
+		#pure_noise_image = cv2.cvtColor(pure_noise_image,cv2.COLOR_BGR2GRAY)
+		cv2.imwrite('noise_pure.png',pure_noise_image)
 
+		# mix noise
+		mix_noise_image = self.img
+		mix_noise_image = mix_noise_image.astype(float)/255.0
+		self.noise_image = random_noise(mix_noise_image,mode='s&p',amount = self.noise_percentage/100)
+		self.noise_image = (self.noise_image *255).astype(np.uint8)
+		cv2.imwrite('noise_mix.png',self.noise_image)
+		self.show_pure_noise()
+		self.show_mix_noise()
+		
+		
 
+	def show_pure_noise(self):
+		self.setGeometry(500,500,1050,600)
+
+	def show_mix_noise(self):
+		noise_image_mix = cv2.imread('noise_mix.png')
+		noise_image_pure = cv2.imread('noise_pure.png')
+		self.setGeometry(500,500,1100,600)
+		noise = QImage(noise_image_pure,self.width,self.height,self.bytesPerline,QImage.Format_RGB888)
+		qimg = QImage(noise_image_mix,self.width,self.height,self.bytesPerline,QImage.Format_RGB888)
+		self.canvas3 = QPixmap(360,360).fromImage(qimg)
+		self.label3.setPixmap(self.canvas3)
+		self.canvas2 = QPixmap(360,360).fromImage(noise)
+		self.label2.setPixmap(self.canvas2)
+
+		#test
+		''' 
+		self.canvas4 = self.canvas3
+		self.label4.setPixmap(self.canvas4)
+		self.canvas5 = self.canvas3
+		self.label5.setPixmap(self.canvas5)
+		self.canvas6 = self.canvas3
+		self.label6.setPixmap(self.canvas6)
+		'''
 
 if __name__ == '__main__':
 	app = QApplication(sys.argv)
