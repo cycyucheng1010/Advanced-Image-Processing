@@ -173,7 +173,7 @@ class MyWidget(QWidget):
 
 			if np.all(np.abs(pure_noise - f_prime) < 1e-5) and np.all(np.abs(noisy_image_neighbor - f_prime_neighbor) < 1e-5):
 				break
-
+			
 		cv2.imwrite('noise_pure.png',pure_noise)
 
 		# mix noise
